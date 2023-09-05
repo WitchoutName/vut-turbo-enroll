@@ -41,3 +41,59 @@ body {
   color: rgba(255, 255, 255, 0.87) !important;
   background-color: #242424 !important;
 }
+
+
+
+
+.popup-container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.section {
+  margin: 10px 0;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+}
+
+input[type="time"],
+input[type="color"] {
+  width: 100%;
+  padding: 5px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px 5px;
+  font-size: 16px;
+  background-color: #0073e6;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005bb7;
+}
+
+#serverTime {
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+
+
+.blok-nezvetsovat:hover{
+  color: #ccc;
+}

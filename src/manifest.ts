@@ -22,7 +22,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ['http://*/*', 'https://*/*'],
+      matches: ['https://www.vut.cz/studis/student.phtml*'],
       js: ['src/content/index.ts'],
     },
   ],
@@ -31,9 +31,5 @@ export default defineManifest({
       resources: ['img/logo-16.png', 'img/logo-34.png', 'img/logo-48.png', 'img/logo-128.png'],
       matches: [],
     },
-  ],
-  permissions: [
-    "activeTab",
-    
   ],
 })
