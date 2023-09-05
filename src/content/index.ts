@@ -8,7 +8,9 @@ const mc = new MessageClient("content")
 function setTimeBlockSelection(state: Boolean) {
     $(".blok-nezvetsovat").each((i, element) => {
         if (state)
-            $(element).css("border", "5px red solid");
+            $(element).parent().css("border", "5px green solid");
+        else
+            $(element).parent().css("border", "");
     });
 }
 

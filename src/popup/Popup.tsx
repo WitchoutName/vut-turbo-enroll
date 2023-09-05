@@ -11,6 +11,8 @@ const mc = new MessageClient("popup");
 function App() {
   const [selectedTime, setSelectedTime] = useState<string | null>("10:00");
   const [currentTime, setCurrentTime] = useState<string | null>("22:50:23");
+  const [isSelectingBlock, setIsSelectingBlock] = useState<Boolean | null>(false);
+  const [selectedBlock, setSelectedBlock] = useState<string | null>("");
 
   useEffect(()=>{
     mc.onMessage("updatedTime", (data: any) => {
@@ -18,11 +20,16 @@ function App() {
     })
   }, []);
 
-  const handleToggleSelectBlock = ()=>{
-    console.log("sending promptSelection")
+  useEffect(()=>{
+    console.log("isSelectingBlock", isSelectingBlock)
     mc.sendMessage("content", "promptSelection", {
-      state: true
+      state: isSelectingBlock
     })
+  }, [isSelectingBlock]);
+
+
+  const handleToggleSelectBlock = ()=>{
+    setIsSelectingBlock(!isSelectingBlock)
   }
 
   const handleChange: ChangeEventHandler = (event) => {
@@ -32,7 +39,6 @@ function App() {
 
   return (
     <main className='text-start'>
-      {/* <h2>Bruuuuuuuuuuh</h2> */}
       <div className='d-flex align-items-center header'>
         <img src={LogoImg} alt="logo" width={40} height={40}/>
         <h3>VUT Turbo Enroll</h3>
