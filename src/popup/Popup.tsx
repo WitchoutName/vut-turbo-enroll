@@ -4,7 +4,8 @@ import LogoImg from '../assets/logo.png'
 import { Button } from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import './Popup.css'
-import MessageClient from '../lib/messaging';
+import MessageClient from '../lib/messaging/MessageClient';
+import { Timeblock } from './../lib/timeblock';
 
 const mc = new MessageClient("popup");
 
@@ -12,18 +13,30 @@ function App() {
   const [selectedTime, setSelectedTime] = useState<string | null>("10:00");
   const [currentTime, setCurrentTime] = useState<string | null>("22:50:23");
   const [isSelectingBlock, setIsSelectingBlock] = useState<Boolean | null>(false);
-  const [selectedBlock, setSelectedBlock] = useState<string | null>("");
+  const [selectedBlock, setSelectedBlock] = useState<Timeblock | null>(null);
 
   useEffect(()=>{
     mc.onMessage("updatedTime", (data: any) => {
       setCurrentTime(data.time)
     })
+
+    mc.onMessage("selectedTimeblock", (data: Timeblock) => {
+      setSelectedBlock(data)
+    })
+
+    console.log("asking to sync")
+    mc.sendMessage("background", "syncPopup", (data: any) => {
+      console.log("recieved sync data")
+      setSelectedTime(data.schedule.time)
+      setSelectedBlock(data.schedule.timeblock)
+    })
   }, []);
 
   useEffect(()=>{
-    console.log("isSelectingBlock", isSelectingBlock)
     mc.sendMessage("content", "promptSelection", {
       state: isSelectingBlock
+    }, async (response: any)=>{
+      // console.log("response:", await response)
     })
   }, [isSelectingBlock]);
 
@@ -54,8 +67,21 @@ function App() {
         </Form.Group>
       </div>
       <div>
-        <h2>Pick a block to register</h2>
-        <Button onClick={handleToggleSelectBlock}>Choose</Button>
+        <Form.Group className="mb-6">
+          <Form.Label>Pick a block to register</Form.Label><br></br>
+          <Button onClick={handleToggleSelectBlock}>Choose</Button>
+        </Form.Group>
+        <Form.Group className="mb-6">
+          <Form.Label>Selected block</Form.Label><br></br>
+          <ul>
+            {selectedBlock && Object.entries(selectedBlock as object).map(([key, value]) => (
+              <li key={key}>
+                {key}: {value}
+              </li>
+            ))}
+          </ul>
+        </Form.Group>
+        
       </div>
 
     </main>

@@ -1,11 +1,15 @@
 console.info('chrome-ext template-react-ts content script')
-import '../assets/jquery.min.js'
-import '../popup/Popup.css'
-import MessageClient from "../lib/messaging";
+import $ from 'jquery';
+import MessageClient from "../lib/messaging/MessageClient";
+import { Timeblock } from './../lib/timeblock';
+
 
 const mc = new MessageClient("content")
+let isSelectingBlock = false;
+
 
 function setTimeBlockSelection(state: Boolean) {
+    isSelectingBlock = true;
     $(".blok-nezvetsovat").each((i, element) => {
         if (state)
             $(element).parent().css("border", "5px green solid");
@@ -13,6 +17,44 @@ function setTimeBlockSelection(state: Boolean) {
             $(element).parent().css("border", "");
     });
 }
+
+
+function parseTimeBlockData(element: HTMLElement): Timeblock{
+    const $element = $(element); // Current element
+    // Extract the data-content attribute value
+    const dataContent = $element.attr('data-content') || "";
+    // Create a temporary element to parse the data-content HTML
+    const $tempElement = $('<div>').html(dataContent);
+    // Extract subject, day, and time from the parsed HTML
+    const data: Timeblock = {
+        subject: $tempElement.find('h5').text(),
+        day: $tempElement.find('.tooltip-den').text(),
+        time: $tempElement.find('.tooltip-doba').text()
+    }
+    return data;
+}
+
+function findSelectedTimeblock(data: Timeblock){
+    const $elements = $('.blok-nezvetsovat');
+
+    $elements.each(function () {
+        parseTimeBlockData(this);
+    });
+}
+
+
+function sendSelectedBlockData(data: Timeblock){
+    mc.sendMessage("background", "selectedTimeblock", data);
+}
+
+
+$(()=>{
+    $(".blok-nezvetsovat").on("click", (e)=>{
+        if(isSelectingBlock){
+            console.log(parseTimeBlockData(e.currentTarget))
+        }
+    })
+})
 
 
 mc.onMessage("promptSelection", (data: any) => {
