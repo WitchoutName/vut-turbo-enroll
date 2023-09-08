@@ -25,14 +25,13 @@ export default class AbstractMessageProcessor{
         throw new Error('setupMessageListener must be implemented.');
     }
 
-    handleMessage(request: Message, processed: boolean = false) {
-        const { action, data } = request;
+    handleMessage({sender, action, data }: Message, metaSender: chrome.runtime.MessageSender) {
         const listeners = this.messageListeners[action] || [];
         listeners.forEach((callback) => {
-            const response = callback(data);
+            const response = callback(data, metaSender);
             this.log("handleMEssage response", response)
             if (response) {
-                this.sendRuntimeMessage(request.sender, request.action, response, null, processed)
+                this.sendMessage(sender, action, response, null)
             }
         });
     }
@@ -42,6 +41,10 @@ export default class AbstractMessageProcessor{
             this.messageListeners[action] = [];
         }
         this.messageListeners[action].push(callback);
+    }
+
+    sendMessage(receiver: string, action: string, data: (object | null) = null, callback: (Function | null) = null) {
+        throw new Error('sendMessage must be implemented.');
     }
 
     sendRuntimeMessage(receiver: string, action: string, data: (object | null) = null, callback: (Function | null) = null, processed: boolean = false) {
@@ -60,6 +63,7 @@ export default class AbstractMessageProcessor{
                 action,
                 data,
             });
+            this.log("[MessageSent]", receiver, action, data)
         }
         catch (error) {
             this.log("[Error sending a message]: ", error) 

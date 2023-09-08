@@ -18,8 +18,8 @@ document.addEventListener('click', function (event) {
   });
 
 
-function setTimeBlockSelection(state: Boolean) {
-    isSelectingBlock = true;
+function setTimeBlockSelection(state: boolean) {
+    isSelectingBlock = state;
     $(".blok-nezvetsovat").each((i, element) => {
         if (state)
             $(element).parent().css("border", "5px green solid");
@@ -44,11 +44,17 @@ function parseTimeBlockData(element: HTMLElement): Timeblock{
     return data;
 }
 
-function findSelectedTimeblock(data: Timeblock){
+function registerTimeblock(searchedData: Timeblock){
     const $elements = $('.blok-nezvetsovat');
 
     $elements.each(function () {
-        parseTimeBlockData(this);
+        const data = parseTimeBlockData(this);
+        if(searchedData.subject == data.subject && 
+           searchedData.day == data.day &&
+           searchedData.time == data.time){
+            $(this).find("input").trigger("click");
+            $('input[name="potvrdit_volbu_vyucovani"].btn-primary').trigger("click");
+        }
     });
 }
 
@@ -59,7 +65,6 @@ function sendSelectedBlockData(data: Timeblock){
 
 
 $(()=>{
-    console.log(new Date())
     $(".blok-nezvetsovat").on("click", (e)=>{
         if(isSelectingBlock){
             setTimeBlockSelection(false)
@@ -71,6 +76,15 @@ $(()=>{
             selectedBlock = data;
         }
     })
+
+    mc.sendMessage("background", Eb.SyncContent, null, (data: any)=>{
+        console.log(data.alarmTriggerServed, !data.alarmTriggerServed)
+        if(!data.alarmTriggerServed){
+            console.log("registering...")
+            registerTimeblock(data.timeblock);
+            mc.sendMessage("background", Eb.AlarmServed)
+        }
+    });
 })
 
 

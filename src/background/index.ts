@@ -7,13 +7,15 @@ import Endpoints from "./endpoints";
 
 const mc = new MessageServer("background");
 
+let timetableTabId: (number | null) = null;
 let timeInputValue = "";
+let alarmTriggerServed = true;
 const alarmStatus: {
     isRunning: boolean,
-    time: number | null
+    time: number
 } = {
     isRunning: false,
-    time: null
+    time: 0
 }
 const schedule: {
     time: string,
@@ -32,6 +34,7 @@ mc.onMessage(Endpoints.SyncPopup, () => {
     }
 })
 
+
 mc.onMessage(Endpoints.TimeInputValue, ({value}: {value: string}) => {
     timeInputValue = value
 })
@@ -42,7 +45,7 @@ mc.onMessage(Endpoints.ConfirmSchedule, () => {
     const now = new Date();
 
     // Calculate the time for the alarm
-    const alarmTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hours), parseInt(minutes) - 1, 59);
+    const alarmTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hours), parseInt(minutes)-1, 59, 800);
     alarmStatus.time = alarmTime.getTime();
     alarmStatus.isRunning = true;
 
@@ -50,27 +53,83 @@ mc.onMessage(Endpoints.ConfirmSchedule, () => {
     chrome.alarms.create('registerBlockAlarm', {
         when: alarmTime.getTime(),
     });
-    console.log("timer set to:", alarmTime.getTime())
     return alarmTime.getTime();
 })
 
 
 
-mc.onMessage(Endpoints.SelectedTimeblock, (data: Timeblock) => {
-    schedule.timeblock = data;
-    mc.sendRuntimeMessage("popup", Ep.SelectedTimeblock, data);
+mc.onMessage(Endpoints.SyncContent, (data: any, sender: chrome.runtime.MessageSender) => {
+    console.log("SyncContent", {
+        alarmTriggerServed,
+        timeblock: schedule.timeblock,
+    })
+    timetableTabId = sender.tab?.id || null;
+    console.log("timetable bat id:", timetableTabId)
+    return {
+        alarmTriggerServed,
+        timeblock: schedule.timeblock,
+    }
 })
 
+mc.onMessage(Endpoints.SelectedTimeblock, (data: Timeblock) => {
+    schedule.timeblock = data;
+    mc.sendMessage("popup", Ep.SelectedTimeblock, data);
+})
+
+mc.onMessage(Endpoints.AlarmServed, () => {
+    alarmTriggerServed = true;
+})
 
 
 
 // Add an event listener for when the alarm fires
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'registerBlockAlarm') {
-      // Perform the desired action when the alarm fires
-      console.log('Alarm triggered at', alarm.scheduledTime);
-      // You can perform any action here, such as displaying a notification or executing a function.
-      mc.sendActiveTabMessage("content", Ec.TriggerRegister, { ...schedule.timeblock })
+        // Perform the desired action when the alarm fires
+        console.log('Alarm triggered at', alarm.scheduledTime);
+
+        alarmStatus.isRunning = false;
+        alarmStatus.time = 0;
+        alarmTriggerServed = false;
+
+        // page.reload() on opera broken
+        chrome.tabs.create({
+            active: true, 
+            url: "https://www.vut.cz/studis/student.phtml?sn=registrace_vyucovani",
+        })
+
+        // console.log('Timetable tab id', timetableTabId);
+        // if (timetableTabId){
+        //     chrome.tabs.reload(timetableTabId, { bypassCache: true }, () => {
+        //         if (chrome.runtime.lastError) {
+        //           console.error("Error reloading tab:", chrome.runtime.lastError);
+        //         } else {
+        //           console.log("Tab reloaded successfully");
+        //         }
+        //       });
+        // }
+        // else {
+        //     console.log('Querying active tab...', timetableTabId);
+        //     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        //         console.log(tabs)
+        //         if (tabs.length > 0) {
+        //             const activeTab = tabs[0];
+        //             if (activeTab.id) {
+        //                 console.log("reloading active tab")
+        //                 chrome.tabs.reload(activeTab.id, { bypassCache: true }, () => {
+        //                     if (chrome.runtime.lastError) {
+        //                       console.error("Error reloading tab:", chrome.runtime.lastError);
+        //                     } else {
+        //                       console.log("Tab reloaded successfully");
+        //                     }
+        //                   });
+        //             } else{
+        //                 console.log("active tab not found")
+        //             }
+        //         }
+        //     });
+        // }
+        
     }
   });
   

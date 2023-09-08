@@ -1,5 +1,6 @@
 import React, { ChangeEvent, ChangeEventHandler } from 'react';
 import { useState, useEffect } from 'react'
+import useSWC from 'use-state-with-callback';
 import { Button } from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import './Popup.css'
@@ -19,22 +20,25 @@ function App() {
   const [selectedBlock, setSelectedBlock] = useState<Timeblock | null>(null);
   const [isSelectingBlock, setIsSelectingBlock] = useState<boolean | null>(false);
   const [isScheduled, setIsScheduled] = useState<boolean>(false);
-  const [alarmTime, setAlarmTime] = useState<number | null>(null);
+  const [alarmTime, setAlarmTime] = useSWC<number>(0, () => {
+    if (isScheduled)
+      setTimeLeftInterval();
+  });
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const setTimeLeftInterval = () => {
-    const interval = setInterval(()=>{
-      const result = ((alarmTime || 0) - Date.now()) / 1000;
-      console.log(result)
-      if (result >= 0){
-        setTimeLeft(result);
-      }
-      else{
-        setIsScheduled(false);
-        clearInterval(interval);
-      }
-    }, 1000)
+      let intervalId: number;
+      intervalId = setInterval(()=>{
+        const result = ((alarmTime || 0) - new Date().getTime()) / 1000;
+        if (result >= 0){
+          setTimeLeft(Math.floor(result));
+        }
+        else{
+          clearInterval(intervalId);
+          setIsScheduled(false);
+        }
+      }, 1000);
   }
 
   useEffect(()=>{
@@ -47,10 +51,6 @@ function App() {
       setSelectedBlock(data.schedule.timeblock);
       setIsScheduled(data.alarmStatus.isRunning);
       setAlarmTime(data.alarmStatus.time)
-      if (data.alarmStatus.isRunning){
-          setTimeLeftInterval()
-      }
-      
     })
   }, []);
 
@@ -86,13 +86,15 @@ function App() {
   };
 
   const handleConfirm = ()=>{
-    console.log("sending confirmation")
     mc.sendMessage("background", Eb.ConfirmSchedule, null, (response: any) => {
-      console.log("received confirmation fo confirmation", response)
       setIsScheduled(true);
       setAlarmTime(response);
-      setTimeLeftInterval();
     });
+  }
+
+  const handleCancel = () => {
+    setIsScheduled(false);
+    // TODO: call background and cancel alarm
   }
 
   return (
@@ -102,13 +104,13 @@ function App() {
         <div className="col-sm-6" style={{paddingLeft: 0, paddingRight: 8}}>
           <Card style={{height: 180}}>
             <div className='mb-2'>Pick registration time</div>
-            <Form.Control type='text' placeholder='10:45' onChange={handleChangeTime} value={selectedTime || ""}></Form.Control>
+            <Form.Control type='text' placeholder='10:45' onChange={handleChangeTime} value={selectedTime || ""} disabled={isScheduled}></Form.Control>
           </Card>
         </div>
         <div className="col-sm-6" style={{paddingLeft: 8, paddingRight: 0}}>
           <Card style={{height: 180}}>
             <div>Pick a time block to register</div>
-            <Button onClick={handleToggleSelectBlock} className={isSelectingBlock ? "btn-secondary mb-4" : "mb-4"}>Select</Button>
+            <Button onClick={handleToggleSelectBlock} className={isSelectingBlock ? "btn-secondary mb-4" : "mb-4"} disabled={isScheduled}>Select</Button>
             { selectedBlock ? <>
                 <div><b>Selected block</b></div>
                 <p>{selectedBlock.subject}, {selectedBlock.day}, {selectedBlock.time}</p>
@@ -126,7 +128,7 @@ function App() {
             <div>Registering selected block in:</div>
             <div><b style={{fontSize: 20}}>{timeLeft}</b>s</div>
             <div className='text-warning'>⚠Keep the timetable tab open!⚠</div>
-            <Button className="btn-danger" style={{width: "150px"}}>Cancel</Button>
+            <Button className="btn-danger" style={{width: "150px"}} onClick={handleCancel}>Cancel</Button>
           </>
         }
       </div>

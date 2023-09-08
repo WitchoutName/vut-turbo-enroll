@@ -1,13 +1,14 @@
 import AbstractMessageProcessor from "./AbstractMessageProcessor";
+import { Message } from './index';
 
 
 export default class MessageClient extends AbstractMessageProcessor{
     setupMessageListener() {
         const name = this.name;
-        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener((request: Message, sender, sendResponse) => {
             this.log("[RawMessage]", request)
             if (request.receiver === name && request.processed) {
-                this.handleMessage(request);
+                this.handleMessage(request, sender);
             }
         });
     }
