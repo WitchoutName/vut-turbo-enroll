@@ -7,7 +7,6 @@ import 'react-clock/dist/Clock.css';
 import './index.css'
 
 
-// console.log("daheeeeeeeeel")
 ReactDOM.createRoot(document.getElementById('app') as HTMLElement).render(
   <React.StrictMode>
     <App />

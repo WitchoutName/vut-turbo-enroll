@@ -1,7 +1,9 @@
-interface Message{
+export interface Message{
     action: string,
     receiver: string,
-    data: object
+    sender: string,
+    data: object,
+    processed: boolean
 }
 
 export {}

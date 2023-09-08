@@ -6,16 +6,8 @@ export default class MessageServer extends AbstractMessageProcessor{
         const name = this.name;
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (request.receiver === name) {
-                // this.handleMessage(request, sendResponse);
-                const { action, data } = request;
-                const listeners = this.messageListeners[action] || [];
-                listeners.forEach((callback) => {
-                const response = callback(data);
-                console.log(this.name, "handleMEssage response", response, sendResponse)
-                if (response) {
-                sendResponse(response);
-            }
-        });
+                this.log("[RawMessage]", request)
+                this.handleMessage(request, true);
             } else {
                 if (request.receiver === 'popup') {
                     this.sendRuntimeMessage('popup', request.action, request.data, (response: any) => {
@@ -33,18 +25,22 @@ export default class MessageServer extends AbstractMessageProcessor{
 
     sendActiveTabMessage(receiver: string, action: string, data: object, callback: (Function | null) = null, processed: boolean = false) {
         try{
+            if (callback) {
+                this.log("setting response listener:", receiver, action)
+                this.onMessage(action, (response: any)=>{
+                    this.log("sendRuntimeMessage sending result:", response)
+                    callback(response);
+                })
+            }
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 const tabId = tabs[0].id;
                 if (tabId){
                     chrome.tabs.sendMessage(tabId, {
                         processed: processed,
+                        sender: this.name,
                         receiver,
                         action,
                         data,
-                    }, (result) => {
-                        if (callback) {
-                            callback(result);
-                        }
                     });
 
                 }

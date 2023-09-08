@@ -1,6 +1,9 @@
+import { Message } from ".";
+
 
 
 export default class AbstractMessageProcessor{
+    static logStatus = true;
     name: string;
     messageListeners: { [action: string]: Function[] };
 
@@ -13,18 +16,23 @@ export default class AbstractMessageProcessor{
         this.setupMessageListener();
     }
 
+    log(...args: any[]){
+        if (AbstractMessageProcessor.logStatus)
+            console.log(`[${this.name}]`, ...args);
+    }
+
     setupMessageListener() {
         throw new Error('setupMessageListener must be implemented.');
     }
 
-    handleMessage(request: { action: any; data: any; }, sendResponse: (response?: any) => void) {
+    handleMessage(request: Message, processed: boolean = false) {
         const { action, data } = request;
         const listeners = this.messageListeners[action] || [];
         listeners.forEach((callback) => {
             const response = callback(data);
-            console.log(this.name, "handleMEssage response", response, sendResponse)
+            this.log("handleMEssage response", response)
             if (response) {
-            sendResponse(response);
+                this.sendRuntimeMessage(request.sender, request.action, response, null, processed)
             }
         });
     }
@@ -36,22 +44,25 @@ export default class AbstractMessageProcessor{
         this.messageListeners[action].push(callback);
     }
 
-    sendRuntimeMessage(receiver: string, action: string, data: object, callback: (Function | null) = null, processed: boolean = false) {
+    sendRuntimeMessage(receiver: string, action: string, data: (object | null) = null, callback: (Function | null) = null, processed: boolean = false) {
         try{
+            if (callback) {
+                this.log("setting response listener:", receiver, action)
+                this.onMessage(action, (response: any)=>{
+                    this.log("sendRuntimeMessage sending result:", response)
+                    callback(response);
+                })
+            }
             chrome.runtime.sendMessage({
                 processed: processed,
+                sender: this.name,
                 receiver,
                 action,
                 data,
-            }, (response) => { 
-                if (callback) {
-                    console.log("sendRuntimeMessage sending result:", response)
-                    callback(response);
-                }
-             });
+            });
         }
         catch (error) {
-            console.log("[Error sending a message]: ", error)
+            this.log("[Error sending a message]: ", error) 
         }
         
     }

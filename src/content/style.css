@@ -1,0 +1,14 @@
+.selected-icon {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background-color: green; /* Set the background color you want */
+    color: white; /* Set the text color */
+    font-size: 16px;
+    text-align: center;
+    line-height: 20px;
+    border-radius: 50%; /* Makes it a circle */
+    cursor: pointer;
+  }

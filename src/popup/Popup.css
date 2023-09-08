@@ -19,7 +19,7 @@ h3 {
 }
 
 h6 {
-  font-size: 0.5rem;
+  font-size: 1rem !important;
   color: #333333;
   margin: 0.5rem;
 }
@@ -31,8 +31,25 @@ a {
   text-decoration: none;
 }
 
-@media (min-width: 480px) {
-  h3 {
-    max-width: none;
-  }
+
+.card {
+  background-color: #1b263b !important; /* Dark background color */
+  color: #fff !important; /* Light text color */
+  border: 1px solid #555; /* Dark border color */
+  padding: 12px;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  display: block !important;
+}
+
+.card-title {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.card-content {
+  font-size: 16px;
 }

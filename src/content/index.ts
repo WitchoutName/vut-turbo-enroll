@@ -1,11 +1,21 @@
 console.info('chrome-ext template-react-ts content script')
 import $ from 'jquery';
+import './style.css'
 import MessageClient from "../lib/messaging/MessageClient";
 import { Timeblock } from './../lib/timeblock';
+import Endpoints from './endpoints';
+import Ep from '../popup/endpoints';
+import Eb from '../background/endpoints'
 
 
 const mc = new MessageClient("content")
 let isSelectingBlock = false;
+let selectedBlock = {};
+
+document.addEventListener('click', function (event) {
+      // Prevent the popup from closing
+      event.stopPropagation();
+  });
 
 
 function setTimeBlockSelection(state: Boolean) {
@@ -27,7 +37,7 @@ function parseTimeBlockData(element: HTMLElement): Timeblock{
     const $tempElement = $('<div>').html(dataContent);
     // Extract subject, day, and time from the parsed HTML
     const data: Timeblock = {
-        subject: $tempElement.find('h5').text(),
+        subject: $tempElement.find("tr:first-child > td").text(),
         day: $tempElement.find('.tooltip-den').text(),
         time: $tempElement.find('.tooltip-doba').text()
     }
@@ -44,53 +54,29 @@ function findSelectedTimeblock(data: Timeblock){
 
 
 function sendSelectedBlockData(data: Timeblock){
-    mc.sendMessage("background", "selectedTimeblock", data);
+    mc.sendMessage("background", Eb.SelectedTimeblock, data);
 }
 
 
 $(()=>{
+    console.log(new Date())
     $(".blok-nezvetsovat").on("click", (e)=>{
         if(isSelectingBlock){
-            console.log(parseTimeBlockData(e.currentTarget))
+            setTimeBlockSelection(false)
+            $(".selected-icon").remove();
+            const icon = $("<div>").addClass("selected-icon").text("✓");
+            $(e.currentTarget).append(icon);
+            const data = parseTimeBlockData(e.currentTarget)
+            sendSelectedBlockData(data);
+            selectedBlock = data;
         }
     })
 })
 
 
-mc.onMessage("promptSelection", (data: any) => {
-    console.log("promptSelection")
-    setTimeBlockSelection(data.state)
+mc.onMessage(Endpoints.PromptSelection, (data: any) => {
+    setTimeBlockSelection(data.state);
 })
 
-
-function handleInnerTextChange(mutationsList: any[], observer: any) {
-    mutationsList.forEach((mutation: any) => {
-        if (mutation.addedNodes[0].data !== mutation.removedNodes[0].data){
-            console.log("sending updated time to background");
-            mc.sendMessage("popup", "updatedTime", {
-                time: mutation.target.innerText
-            });
-        }
-
-    });
-  }
-
-let observer = new MutationObserver(handleInnerTextChange)
-
-function addObserverIfDesiredNodeAvailable() {
-    let targetSpanElement = document.getElementsByClassName("-js-server-time")[0];
-    while(!targetSpanElement) {
-        //The node we need does not exist yet.
-        //Wait 500ms and try again
-        targetSpanElement = document.getElementsByClassName("-js-server-time")[0]
-    }
-    observer.observe(targetSpanElement, {
-        characterData: true,
-        childList: true,
-        subtree: true
-    })
-
-}
-addObserverIfDesiredNodeAvailable();
 
 export {}
