@@ -24,8 +24,7 @@ To use this Chrome extension, follow these steps:
 
 ### Live demo
 
-![damo](https://github.com/WitchoutName/vut-turbo-enroll/blob/main/public/vut-turbo-enroll-demo-edit.gif?raw=true)
-
+![damo](https://youtu.be/VMR8unJx6T0)
 # Development
 
 ## How It Works
