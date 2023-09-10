@@ -6,8 +6,8 @@ This Chrome extension allows you to automate the registration of class blocks on
 
 To use this Chrome extension, follow these steps:
 
-1. Clone the repository to your local machine.
-2. Open Google Chrome and go to the Extensions page by clicking the three dots in the top right corner, then selecting "More tools" > "Extensions."
+1. Download the latest release and unzip the file.
+2. Open Google Chrome or any other chrome based browser and go to the Extensions page by clicking the three dots in the top right corner, then selecting "More tools" > "Extensions."
 3. Enable "Developer mode" by toggling the switch in the top right corner of the Extensions page.
 4. Click the "Load unpacked" button, and select the directory where you cloned the repository.
 5. The extension should now be installed and visible in your Chrome toolbar.
@@ -21,6 +21,10 @@ To use this Chrome extension, follow these steps:
 5. Click the "Confirm" button to confirm the registration. The extension will schedule the registration for the specified time.
 6. The extension will automatically register the selected time block when the scheduled time arrives.
 7. If needed, you can cancel the registration by clicking the "Cancel" button.
+
+### Live demo
+
+![damo](https://github.com/WitchoutName/vut-turbo-enroll/blob/main/public/vut-turbo-enroll-demo-edit.gif?raw=true)
 
 # Development
 
