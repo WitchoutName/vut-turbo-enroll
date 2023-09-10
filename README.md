@@ -24,7 +24,7 @@ To use this Chrome extension, follow these steps:
 
 ### Live demo
 
-![demo](https://www.youtube.com/watch?v=VMR8unJx6T0)
+[![demo](http://img.youtube.com/vi/VMR8unJx6T0/0.jpg)](http://www.youtube.com/watch?v=VMR8unJx6T0 "Video Title")
 # Development
 
 ## How It Works
