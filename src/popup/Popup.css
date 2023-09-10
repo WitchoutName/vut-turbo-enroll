@@ -45,11 +45,30 @@ a {
   display: block !important;
 }
 
-.card-title {
-  font-size: 24px;
-  margin-bottom: 8px;
+.card-left{
+  padding-left: 0 !important;
+  padding-right: 8px !important;
 }
 
-.card-content {
-  font-size: 16px;
+.card-right{
+  padding-left: 8px !important;
+  padding-right: 0 !important;
+}
+
+.main-container {
+  text-align: start;
+}
+
+.row-container {
+  margin: 0;
+  margin-bottom: 3px;
+}
+
+.card-container{
+  height: 180px !important;
+}
+
+
+.w-150 {
+  width: 150px;
 }

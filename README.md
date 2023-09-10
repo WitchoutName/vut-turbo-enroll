@@ -1,6 +1,45 @@
 # vut-turbo-enroll
 
-> a chrome extension tools built with Vite + React, and Manifest v3
+This Chrome extension allows you to automate the registration of class blocks on the VUT university website. It provides a convenient interface for selecting a time block and setting the registration time. When the registration time arrives, the extension will automatically register the selected time block for you.
+
+## Installation
+
+To use this Chrome extension, follow these steps:
+
+1. Clone the repository to your local machine.
+2. Open Google Chrome and go to the Extensions page by clicking the three dots in the top right corner, then selecting "More tools" > "Extensions."
+3. Enable "Developer mode" by toggling the switch in the top right corner of the Extensions page.
+4. Click the "Load unpacked" button, and select the directory where you cloned the repository.
+5. The extension should now be installed and visible in your Chrome toolbar.
+
+## Usage
+
+1. Click on the extension icon in the Chrome toolbar to open the popup.
+2. Pick a registration time by entering it in the "Pick registration time" input field. The time should be in the format `hh:mm`.
+3. Click the "Select" button to start selecting a time block on the VUT website.
+4. Once you've selected a time block, it will be displayed below the "Pick a time block to register" section.
+5. Click the "Confirm" button to confirm the registration. The extension will schedule the registration for the specified time.
+6. The extension will automatically register the selected time block when the scheduled time arrives.
+7. If needed, you can cancel the registration by clicking the "Cancel" button.
+
+# Development
+
+## How It Works
+
+This extension uses a combination of background scripts, content scripts, and messaging to achieve its functionality.
+
+- The **Background Script** :
+- Manages alarms for scheduling registration.
+- Communicates with the popup and content script using message passing.
+- Creates and cancels alarms for registration.
+- Handles the logic for registering the selected class block.
+- The **Content Script** :
+- Injected into the VUT website.
+- Allows users to select a class block by clicking on it.
+- Communicates with the background script to trigger registration.
+- The **Popup** :
+- Provides a user-friendly interface for setting the registration time.
+- Communicates with the background script to schedule registration and cancel it if needed.
 
 ## Installing
 
@@ -23,7 +62,7 @@ $ npm run dev
 1. set your Chrome browser 'Developer mode' up
 2. click 'Load unpacked', and select `vut-turbo-enroll/build` folder
 
-### Nomal FrontEnd Developer Mode
+### Normal FrontEnd Developer Mode
 
 1. access `http://localhost:3000/`
 2. when debugging popup page, open `/popup.html`

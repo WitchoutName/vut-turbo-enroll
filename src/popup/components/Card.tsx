@@ -1,14 +1,23 @@
-import * as React from 'react';
+import React from 'react';
 
-export interface ICardProps {
-    children: string | JSX.Element | JSX.Element[],
-    [x:string]: any
+// Define Card component interface for type checking
+interface ICardProps {
+    className?: string;
+    children: React.ReactNode;
+    [x: string]: any;
 }
 
-export default function Card ({children, ...rest}: ICardProps) {
-  return (
-    <div className='card text-center' {...rest}>
-        {children}
-    </div>
-  );
+// Define Card stateless functional component
+const Card: React.FC<ICardProps> = ({ children, className, ...rest }) => {
+    const defaultClass = 'card text-center';
+    const combinedClasses = className ? `${defaultClass} ${className}` : defaultClass;
+    // Render Card component
+    return (
+        <div className={combinedClasses} {...rest}>
+            {children}
+        </div>
+    );
 }
+
+// Export Card component
+export default Card;

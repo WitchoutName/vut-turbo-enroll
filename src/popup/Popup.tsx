@@ -1,142 +1,160 @@
-import React, { ChangeEvent, ChangeEventHandler } from 'react';
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import useSWC from 'use-state-with-callback';
-import { Button } from 'react-bootstrap';
-import Form from 'react-bootstrap/Form';
-import './Popup.css'
 import MessageClient from '../lib/messaging/MessageClient';
-import { Timeblock } from './../lib/timeblock';
 import Header from './components/Header';
-import Card from './components/Card';
+import TimeSelectionCard from './components/TimeSelectionCard';
+import BlockSelectionCard from './components/BlockSelectionCard';
+import ScheduleCard from './components/ScheduleCard';
 import { isValidTimeFormat } from '../lib/format';
-import Endpoints from './endpoints';
-import Eb from '../background/endpoints'
-import Ec from '../content/endpoints';
+import PopupEndpoints from './endpoints';
+import BackgroundEndpoints from '../background/endpoints';
+import ContentEndpoints from '../content/endpoints';
 
+import './Popup.css';
+
+
+// Initialize Message Client to "popup"
 const mc = new MessageClient("popup");
 
-function App() {
+export default function App() {
+
+  // Define state variables
   const [selectedTime, setSelectedTime] = useState<string>("10:00");
-  const [selectedBlock, setSelectedBlock] = useState<Timeblock | null>(null);
-  const [isSelectingBlock, setIsSelectingBlock] = useState<boolean | null>(false);
+  const [selectedBlock, setSelectedBlock] = useState<any>(null);
+  const [isSelectingBlock, setIsSelectingBlock] = useState<boolean>(false);
   const [isScheduled, setIsScheduled] = useState<boolean>(false);
-  const [alarmTime, setAlarmTime] = useSWC<number>(0, () => {
-    if (isScheduled)
-      setTimeLeftInterval();
-  });
+  const [alarmTime, setAlarmTime] = useSWC<number>(0, onAlarmTimeChange);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const setTimeLeftInterval = () => {
-      let intervalId: number;
-      intervalId = setInterval(()=>{
-        const result = ((alarmTime || 0) - new Date().getTime()) / 1000;
-        if (result >= 0){
-          setTimeLeft(Math.floor(result));
-        }
-        else{
-          clearInterval(intervalId);
-          setIsScheduled(false);
-        }
-      }, 1000);
+  function onAlarmTimeChange(){
+    if (isScheduled){
+      setTimeLeftInterval();
+    }
   }
 
-  useEffect(()=>{
-    mc.onMessage(Endpoints.SelectedTimeblock, (data: Timeblock) => {
-      setSelectedBlock(data)
-    })
+  // Effect handler for receiving new time block
+  mc.onMessage(PopupEndpoints.SelectedTimeblock, setTimeBlockFromMessage);
 
-    mc.sendMessage("background", Eb.SyncPopup, {}, (data: any) => {
-      setSelectedTime(data.schedule.time || data.timeInputValue);
-      setSelectedBlock(data.schedule.timeblock);
-      setIsScheduled(data.alarmStatus.isRunning);
-      setAlarmTime(data.alarmStatus.time)
-    })
+  // Sync state on startup
+  useEffect(() => {
+    syncPopup();
   }, []);
 
-  useEffect(()=>{
-    mc.sendMessage("content", Ec.PromptSelection, {
+  // Prompts block selection
+  useEffect(() => {
+    mc.sendMessage("content", ContentEndpoints.PromptSelection, {
       state: isSelectingBlock
-    }, (response: any)=>{
-      // console.log("response:", await response)
     })
   }, [isSelectingBlock]);
 
-
-  useEffect(()=>{
-    if (!isValidTimeFormat(selectedTime)){
-      setErrorMessage("Invalid time format")
-    }
-    else if(!selectedBlock){
-      setErrorMessage("No timeblock selected")
-    }
-    else setErrorMessage("")
+  // Error validation
+  useEffect(()=> {
+    validateEntry();
   }, [selectedBlock, selectedTime]);
 
-
-  const handleToggleSelectBlock = ()=>{
-    setIsSelectingBlock(!isSelectingBlock)
+  // Handlers
+  function setTimeBlockFromMessage(data: any) {
+    setSelectedBlock(data);
   }
 
-  const handleChangeTime: (e: ChangeEvent<HTMLInputElement>) => void = (e) => {
-    mc.sendMessage("background", Eb.TimeInputValue, {
+  async function syncPopup() {
+    try {
+      mc.sendMessage("background", BackgroundEndpoints.SyncPopup, {}, (data: any)=>{
+        setSelectedTime(data.schedule.time || data.timeInputValue);
+        setSelectedBlock(data.schedule.timeblock);
+        setIsScheduled(data.alarmStatus.isRunning);
+        setAlarmTime(data.alarmStatus.time);
+      })
+      } catch (error) {
+      console.error('Failed to synchronize popup:', error);
+    }
+  }
+
+  function setTimeLeftInterval() {
+    let intervalId = setInterval(()=>{
+      const secondsLeft = Math.floor((alarmTime - new Date().getTime()) / 1000);
+      if (secondsLeft >= 0){
+        setTimeLeft(secondsLeft);
+      }
+      else{
+        clearInterval(intervalId);
+        setIsScheduled(false);
+      }
+    }, 1000);
+  }
+
+  function validateEntry() {
+    if (!isValidTimeFormat(selectedTime)){
+      setErrorMessage("Invalid time format");
+    }
+    else if(!selectedBlock){
+      setErrorMessage("No time block selected");
+    }
+    else {
+      setErrorMessage("");
+    }
+  }
+
+  // Component methods
+  function handleToggleSelectBlock() {
+    setIsSelectingBlock(!isSelectingBlock);
+  }
+
+  const handleChangeTime = (e: ChangeEvent<HTMLInputElement>) => {
+    mc.sendMessage("background", BackgroundEndpoints.TimeInputValue, {
       value: e.target.value
     })
     setSelectedTime(e.target.value);
   };
 
-  const handleConfirm = ()=>{
-    mc.sendMessage("background", Eb.ConfirmSchedule, null, (response: any) => {
-      setIsScheduled(true);
-      setAlarmTime(response);
-    });
+  const handleConfirm = async () => {
+    try {
+      mc.sendMessage("background", BackgroundEndpoints.ConfirmSchedule, null, (response: React.SetStateAction<number>) => {
+        setIsScheduled(true);
+        setAlarmTime(response);
+      })
+      } catch(error) {
+      console.error('Failed to confirm schedule:', error);
+    }
   }
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setIsScheduled(false);
-    mc.sendMessage("background", Eb.CancelAlarm, null);
+    try {
+      await mc.sendMessage("background", BackgroundEndpoints.CancelAlarm, null);
+    } catch(error) {
+      console.error('Failed to cancel alarm:', error);
+    }
   }
 
   return (
-    <main className='text-start'>
+    <main className='main-container'>
       <Header/>
-      <div className='row mx-0 mb-3'>
-        <div className="col-sm-6" style={{paddingLeft: 0, paddingRight: 8}}>
-          <Card style={{height: 180}}>
-            <div className='mb-2'>Pick registration time</div>
-            <Form.Control type='text' placeholder='10:45' onChange={handleChangeTime} value={selectedTime || ""} disabled={isScheduled}></Form.Control>
-          </Card>
+      <div className='row row-container mx-0 mb-3'>
+        <div className="col-sm-6 card-left">
+          <TimeSelectionCard 
+            handleChangeTime={handleChangeTime} 
+            selectedTime={selectedTime} 
+            isScheduled={isScheduled} 
+          />
         </div>
-        <div className="col-sm-6" style={{paddingLeft: 8, paddingRight: 0}}>
-          <Card style={{height: 180}}>
-            <div>Pick a time block to register</div>
-            <Button onClick={handleToggleSelectBlock} className={isSelectingBlock ? "btn-secondary mb-4" : "mb-4"} disabled={isScheduled}>Select</Button>
-            { selectedBlock ? <>
-                <div><b>Selected block</b></div>
-                <p>{selectedBlock.subject}, {selectedBlock.day}, {selectedBlock.time}</p>
-              </> : <></>}
-          </Card>
+        <div className="col-sm-6 card-right">
+          <BlockSelectionCard 
+            handleToggleSelectBlock={handleToggleSelectBlock}
+            isSelectingBlock={isSelectingBlock}
+            selectedBlock={selectedBlock}
+            isScheduled={isScheduled}
+          />
         </div>
       </div>
-      <div className='card m-0'>
-        {!isScheduled ?
-          <>
-            <div><small className='text-danger'>{errorMessage}</small></div>
-            <Button className="btn-success" style={{width: "150px"}} disabled={!!errorMessage} onClick={handleConfirm}>Confirm</Button>
-          </> :
-          <>
-            {timeLeft > 0 && <>
-              <div>Registering selected block in:</div>
-              <div><b style={{fontSize: 20}}>{timeLeft}</b>s</div>
-            </>
-            }
-            <div className='text-warning'>⚠Keep the timetable tab open!⚠</div>
-            <Button className="btn-danger" style={{width: "150px"}} onClick={handleCancel}>Cancel</Button>
-          </>
-        }
-      </div>
+      <ScheduleCard 
+        isScheduled={isScheduled} 
+        errorMessage={errorMessage} 
+        timeLeft={timeLeft} 
+        handleConfirm={handleConfirm} 
+        handleCancel={handleCancel} 
+      />
     </main>
   )
 }
-
-export default App

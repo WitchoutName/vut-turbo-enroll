@@ -6,9 +6,4 @@ export interface Timeblock{
     time: string
 }
 
-export function getTimeblockString(block: Timeblock){
-    return `${block.subject}-${block.day}-${block.time}`
-}
-
-
 export {}
