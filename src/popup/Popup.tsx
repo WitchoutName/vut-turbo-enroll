@@ -94,7 +94,7 @@ function App() {
 
   const handleCancel = () => {
     setIsScheduled(false);
-    // TODO: call background and cancel alarm
+    mc.sendMessage("background", Eb.CancelAlarm, null);
   }
 
   return (
@@ -125,8 +125,11 @@ function App() {
             <Button className="btn-success" style={{width: "150px"}} disabled={!!errorMessage} onClick={handleConfirm}>Confirm</Button>
           </> :
           <>
-            <div>Registering selected block in:</div>
-            <div><b style={{fontSize: 20}}>{timeLeft}</b>s</div>
+            {timeLeft > 0 && <>
+              <div>Registering selected block in:</div>
+              <div><b style={{fontSize: 20}}>{timeLeft}</b>s</div>
+            </>
+            }
             <div className='text-warning'>⚠Keep the timetable tab open!⚠</div>
             <Button className="btn-danger" style={{width: "150px"}} onClick={handleCancel}>Cancel</Button>
           </>

@@ -80,6 +80,12 @@ mc.onMessage(Endpoints.AlarmServed, () => {
     alarmTriggerServed = true;
 })
 
+mc.onMessage(Endpoints.CancelAlarm, () => {
+    alarmTriggerServed = true;
+    alarmStatus.isRunning = false;
+    alarmStatus.time = 0;
+})
+
 
 
 // Add an event listener for when the alarm fires
