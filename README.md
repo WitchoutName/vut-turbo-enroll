@@ -24,7 +24,7 @@ To use this Chrome extension, follow these steps:
 
 ### Live demo
 
-![damo](https://www.youtube.com/watch?v=VMR8unJx6T0)
+![demo](https://www.youtube.com/watch?v=VMR8unJx6T0)
 # Development
 
 ## How It Works
